@@ -1,19 +1,6 @@
-/**
- * app.js — HSR Custom Team Webapp
- * Core application logic for the Telegram Mini App.
- *
- * Flow:
- *  1. Parse UID + slot + tele_id from URL params (passed by the bot)
- *  2. Verify Telegram user ID matches tele_id param (owner auth)
- *  3. Call API to get default card data
- *  4. Load game_data.json for character/LC picker
- *  5. Render main character panel + 3 teammate slots
- *  6. User configures each teammate → Submit sends data back to bot
- */
 
 'use strict';
 
-/* ── Telegram Mini App SDK ─────────────────────────────────────────── */
 const tg = window.Telegram?.WebApp;
 if (tg) {
   tg.ready();
@@ -21,13 +8,11 @@ if (tg) {
   tg.enableClosingConfirmation();
 }
 
-/* ── Constants ─────────────────────────────────────────────────────── */
+
 const API_URL = 'https://ilcapitano01-gi-card-api.hf.space/getcals';
 
-/* ── Aliases ──────────────────────────────────────────────────────────*/
 const { Icons, Images, loadGameData, getCharacterList, getLightConeList, getElements, getPaths, getLCPaths } = window.GameDataLoader;
 
-/* ── App State ─────────────────────────────────────────────────────── */
 const state = {
   uid:         null,
   slot:        1,
@@ -36,10 +21,8 @@ const state = {
   charList:    [],
   lcList:      [],
 
-  // 3 teammate slots: null = empty
   teammates: [null, null, null],
 
-  // Config modal working state
   config: {
     activeSlot:    -1,
     characterId:   null,
@@ -49,12 +32,10 @@ const state = {
     superimpose:   1,
   },
 
-  // Filter states for pickers
   charFilters: { element: null, path: null, search: '' },
   lcFilters:   { path: null, rarity: null, search: '' },
 };
 
-/* ── DOM refs ──────────────────────────────────────────────────────── */
 const $ = id => document.getElementById(id);
 const dom = {
   loadingOverlay: $('loading-overlay'),
@@ -136,22 +117,14 @@ const dom = {
   configSave:       $('config-save'),
 };
 
-/* ══════════════════════════════════════════════════════════════════════
-   INIT
-   ══════════════════════════════════════════════════════════════════════ */
 async function init() {
   setLoading('Connecting...');
 
-  // Parse URL params
   const params   = new URLSearchParams(window.location.search);
   state.uid      = params.get('uid')     || '800556377'; // fallback for dev
   state.slot     = parseInt(params.get('slot')    || '1', 10);
   const ownerTid = params.get('tele_id');              // owner's Telegram ID
 
-  // ── Owner Auth ────────────────────────────────────────────────────────
-  // Telegram.WebApp.initDataUnsafe.user is guaranteed by Telegram's SDK.
-  // We compare against the tele_id the bot embedded in the URL.
-  // In dev mode (no SDK / no tele_id param) we skip the check.
   if (tg && ownerTid) {
     const teleUser = tg.initDataUnsafe?.user;
     const actualId = teleUser ? String(teleUser.id) : null;
@@ -164,7 +137,7 @@ async function init() {
       return;   // Stop init entirely
     }
   }
-  // ─────────────────────────────────────────────────────────────────────
+
 
   if (dom.headerUID) dom.headerUID.textContent = `UID ${state.uid}`;
 
@@ -203,9 +176,7 @@ async function init() {
   }
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   API
-   ══════════════════════════════════════════════════════════════════════ */
+
 async function fetchApiData(uid, slot) {
   const res = await fetch(API_URL, {
     method: 'POST',
@@ -216,9 +187,6 @@ async function fetchApiData(uid, slot) {
   return res.json();
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   RENDER — Main App
-   ══════════════════════════════════════════════════════════════════════ */
 function renderApp() {
   renderMainCharPanel();
   renderAllSlots();
@@ -280,9 +248,6 @@ function renderMainCharPanel() {
   }
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   RENDER — Teammate Slots
-   ══════════════════════════════════════════════════════════════════════ */
 function renderAllSlots() {
   state.teammates.forEach((tm, i) => renderSlot(i, tm));
 }
@@ -332,9 +297,7 @@ function getLCName(id) {
   return lc ? lc.name : id;
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   SUBMIT STATE
-   ══════════════════════════════════════════════════════════════════════ */
+
 function updateSubmitState() {
   const filled = state.teammates.filter(Boolean).length;
   const ready  = filled === 3;
@@ -348,9 +311,6 @@ function updateSubmitState() {
   }
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   EVENTS
-   ══════════════════════════════════════════════════════════════════════ */
 function bindEvents() {
   // Slot add buttons
   dom.slotEls.forEach((s, i) => {
@@ -417,9 +377,7 @@ function removeTeammate(i) {
   updateSubmitState();
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   CONFIG MODAL
-   ══════════════════════════════════════════════════════════════════════ */
+
 function openConfigModal(slotIndex, existingTeammate) {
   state.config.activeSlot = slotIndex;
 
@@ -502,9 +460,6 @@ function saveConfig() {
   closeConfigModal();
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   CHARACTER PICKER MODAL
-   ══════════════════════════════════════════════════════════════════════ */
 let _charModalOrigin = 'direct'; // 'direct' | 'config'
 
 function openCharModalFromConfig() {
@@ -590,9 +545,6 @@ function selectCharacter(char) {
   closeCharModal();
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   LIGHT CONE PICKER MODAL
-   ══════════════════════════════════════════════════════════════════════ */
 let _lcModalOrigin = 'config';
 
 function openLCModalFromConfig() {
@@ -672,9 +624,6 @@ function selectLightCone(lc) {
   closeLCModal();
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   SUBMIT
-   ══════════════════════════════════════════════════════════════════════ */
 function submitData() {
   const ready = state.teammates.every(Boolean);
   if (!ready) return;
@@ -700,9 +649,7 @@ function submitData() {
   }
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   HELPERS — Picker Item
-   ══════════════════════════════════════════════════════════════════════ */
+
 function createPickerItem({ imgUrl, name, rarity, overlayIconUrl, selected, delay, onClick, isLC }) {
   const item = document.createElement('div');
   item.className = `picker-item r${rarity}${selected ? ' selected' : ''}`;
@@ -743,7 +690,7 @@ function createPickerItem({ imgUrl, name, rarity, overlayIconUrl, selected, dela
   return item;
 }
 
-/* ── Filter Chip helper ─────────────────────────────────────────────── */
+
 function makeChip(label, iconUrl, active, onClick) {
   const chip = document.createElement('button');
   chip.className = `filter-chip${active ? ' active' : ''}`;
@@ -758,9 +705,7 @@ function makeChip(label, iconUrl, active, onClick) {
   return chip;
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   MODAL HELPERS
-   ══════════════════════════════════════════════════════════════════════ */
+
 function showModal(el) {
   el.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
@@ -776,9 +721,6 @@ function hideModal(el) {
   if (!anyOpen) document.body.style.overflow = '';
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   LOADING / ERROR
-   ══════════════════════════════════════════════════════════════════════ */
 function setLoading(text) {
   if (dom.loadingText) dom.loadingText.textContent = text;
   dom.loadingOverlay.classList.remove('hidden');
@@ -802,9 +744,7 @@ function showError(msg) {
   dom.errorScreen.classList.remove('hidden');
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   UTILITIES
-   ══════════════════════════════════════════════════════════════════════ */
+
 function debounce(fn, ms) {
   let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
 }
@@ -831,7 +771,4 @@ shakeStyle.textContent = `
 }`;
 document.head.appendChild(shakeStyle);
 
-/* ══════════════════════════════════════════════════════════════════════
-   BOOT
-   ══════════════════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', init);
