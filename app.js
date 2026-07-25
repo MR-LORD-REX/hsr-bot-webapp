@@ -128,11 +128,30 @@ const dom = {
 
 async function init() {
   setLoading('Connecting...');
-
+  
+  // Parse params (supports both standard URL params and Telegram start_param)
   const params   = new URLSearchParams(window.location.search);
-  state.uid      = params.get('uid')     || '800556377'; // fallback for dev
-  state.slot     = parseInt(params.get('slot')    || '1', 10);
-  const ownerTid = params.get('tele_id');              // owner's Telegram ID
+  
+  // start_param is used when launched via a BotFather Direct Link (t.me/bot/app?startapp=...)
+  // We format it as: uid-slot-botUsername
+  const startParam = tg?.initDataUnsafe?.start_param;
+  let sUid = params.get('uid');
+  let sSlot = params.get('slot');
+  let sBot = params.get('bot');
+
+  if (startParam) {
+    const parts = startParam.split('-');
+    if (parts.length >= 3) {
+      sUid = parts[0];
+      sSlot = parts[1];
+      sBot = parts[2];
+    }
+  }
+
+  state.uid      = sUid || '800556377'; // fallback for dev
+  state.slot     = parseInt(sSlot || '1', 10);
+  const ownerTid = params.get('tele_id');              // owner's Telegram ID (if passed)
+  state.botUsername = sBot; // Store bot username for submitData
 
   if (tg && ownerTid) {
     const teleUser = tg.initDataUnsafe?.user;
@@ -638,7 +657,7 @@ function submitData() {
   if (!ready) return;
 
   const params = new URLSearchParams(window.location.search);
-  const botUsername = params.get('bot');
+  const botUsername = state.botUsername || new URLSearchParams(window.location.search).get('bot');
 
   if (tg && botUsername) {
     // Format: c_{slot}_{cId1}-{lc1}-{e1}{s1}_{cId2}...
