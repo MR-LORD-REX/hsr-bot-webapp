@@ -1,0 +1,4 @@
+{
+  "api_url": " https://shandra-polysyllogistic-electorally.ngrok-free.dev/submit_team",
+  "_comment": "Change api_url to your ngrok tunnel (local dev) or production URL. Push to GitHub Pages after each change."
+}

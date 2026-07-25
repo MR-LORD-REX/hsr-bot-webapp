@@ -25,8 +25,12 @@ const {
 const state = {
   uid:         null,
   slot:        1,
-  apiData:     null,    // Raw API response
-  gameData:    null,    // { characters, lightCones }
+  chatId:      null,   // Origin group chat_id (from startParam)
+  messageId:   null,   // Origin message_id to edit after submission
+  botApiUrl:   null,   // Loaded from config.json at runtime
+  botUsername: null,
+  apiData:     null,   // Raw API response
+  gameData:    null,   // { characters, lightCones }
   charList:    [],
   lcList:      [],
 
@@ -129,43 +133,44 @@ const dom = {
 async function init() {
   setLoading('Connecting...');
   
-  // Parse params (supports both standard URL params and Telegram start_param)
-  const params   = new URLSearchParams(window.location.search);
-  
-  // start_param is used when launched via a BotFather Direct Link (t.me/bot/app?startapp=...)
-  // We format it as: uid-slot-botUsername
+  // ── Load config.json (bot API URL) ────────────────────────────────────
+  try {
+    const cfgRes = await fetch('./config.json');
+    const cfg    = await cfgRes.json();
+    state.botApiUrl = cfg.api_url || null;
+  } catch (_) {
+    console.warn('config.json not found or invalid — direct API posting disabled');
+  }
+
+  // ── Parse startParam (Direct Link: t.me/bot/team?startapp=...) ─────────
+  // Format: {uid}-{slot}-{chatId}-{messageId}-{botUsername}
+  // URL params are the fallback (for local dev / web_app buttons)
+  const params     = new URLSearchParams(window.location.search);
   const startParam = tg?.initDataUnsafe?.start_param;
-  let sUid = params.get('uid');
+
+  let sUid  = params.get('uid');
   let sSlot = params.get('slot');
-  let sBot = params.get('bot');
+  let sChat = params.get('chat_id');
+  let sMsg  = params.get('message_id');
+  let sBot  = params.get('bot');
 
   if (startParam) {
     const parts = startParam.split('-');
-    if (parts.length >= 3) {
-      sUid = parts[0];
+    // parts: [uid, slot, chatId, messageId, botUsername]
+    if (parts.length >= 4) {
+      sUid  = parts[0];
       sSlot = parts[1];
-      sBot = parts[2];
+      sChat = parts[2];
+      sMsg  = parts[3];
+      sBot  = parts.slice(4).join('-'); // bot username (no dashes normally)
     }
   }
 
-  state.uid      = sUid || '800556377'; // fallback for dev
-  state.slot     = parseInt(sSlot || '1', 10);
-  const ownerTid = params.get('tele_id');              // owner's Telegram ID (if passed)
-  state.botUsername = sBot; // Store bot username for submitData
-
-  if (tg && ownerTid) {
-    const teleUser = tg.initDataUnsafe?.user;
-    const actualId = teleUser ? String(teleUser.id) : null;
-    if (actualId && actualId !== String(ownerTid)) {
-      // Someone else opened this URL — block immediately.
-      dom.loadingOverlay.classList.add('hidden');
-      showError('This card belongs to someone else.\nYou can only configure your own team.');
-      // Disable closing confirmation so user can dismiss cleanly
-      try { tg.disableClosingConfirmation(); } catch(_) {}
-      return;   // Stop init entirely
-    }
-  }
-
+  state.uid        = sUid  || '800556377';
+  state.slot       = parseInt(sSlot || '1', 10);
+  state.chatId     = sChat  ? parseInt(sChat, 10)  : null;
+  state.messageId  = sMsg   ? parseInt(sMsg, 10)   : null;
+  state.botUsername = sBot  || null;
 
   if (dom.headerUID) dom.headerUID.textContent = `UID ${state.uid}`;
 
@@ -652,28 +657,53 @@ function selectLightCone(lc) {
   closeLCModal();
 }
 
-function submitData() {
+async function submitData() {
   const ready = state.teammates.every(Boolean);
   if (!ready) return;
 
-  const params = new URLSearchParams(window.location.search);
-  const botUsername = state.botUsername || new URLSearchParams(window.location.search).get('bot');
+  const teleUser = tg?.initDataUnsafe?.user;
+  const teleId   = teleUser?.id || null;
 
-  if (tg && botUsername) {
-    // Format: c_{slot}_{cId1}-{lc1}-{e1}{s1}_{cId2}...
-    const parts = [ `c`, state.slot ];
-    state.teammates.forEach(tm => {
-      parts.push(`${tm.characterId}-${tm.lightConeId}-${tm.characterEidolon}${tm.lightConeSuperimposition}`);
-    });
-    
-    const payloadStr = parts.join('_');
-    tg.openTelegramLink(`https://t.me/${botUsername}?start=${payloadStr}`);
-    // Close the webapp explicitly (some clients don't auto-close on openTelegramLink)
-    setTimeout(() => tg.close(), 100);
-    return;
+  // ── Option A: Direct POST to bot API (works from groups, silent) ───────
+  if (state.botApiUrl && state.chatId && state.messageId && tg?.initData) {
+    setLoading('Generating card\u2026');
+    try {
+      const body = {
+        slot:       state.slot,
+        teammates:  state.teammates.map(tm => ({
+          characterId:              tm.characterId,
+          lightCone:                tm.lightConeId,
+          characterEidolon:         tm.characterEidolon,
+          lightConeSuperimposition: tm.lightConeSuperimposition,
+        })),
+        chat_id:    state.chatId,
+        message_id: state.messageId,
+        tele_id:    teleId,
+        init_data:  tg.initData,
+      };
+
+      const res = await fetch(state.botApiUrl, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || `Server error ${res.status}`);
+      }
+
+      // Success — close the webapp, group message is updated silently
+      tg.close();
+      return;
+    } catch (err) {
+      hideLoading();
+      showError('Failed to generate card:\n' + err.message);
+      return;
+    }
   }
 
-  // Fallback if not opened with bot param (e.g. Menu Button or dev mode)
+  // ── Option B: Dev / fallback — log to console ──────────────────────────
   const payload = {
     slot: state.slot,
     teammates: state.teammates.map(tm => ({
@@ -683,16 +713,8 @@ function submitData() {
       lightConeSuperimposition: tm.lightConeSuperimposition,
     })),
   };
-
-  const jsonStr = JSON.stringify(payload);
-
-  if (tg && tg.sendData) {
-    tg.sendData(jsonStr);
-  } else {
-    // Dev fallback
-    console.log('[DEV] sendData payload:', jsonStr);
-    alert('Dev mode — payload:\n' + JSON.stringify(payload, null, 2));
-  }
+  console.log('[DEV] submitData payload:', payload);
+  alert('Dev mode — no API URL in config.json\n' + JSON.stringify(payload, null, 2));
 }
 
 
