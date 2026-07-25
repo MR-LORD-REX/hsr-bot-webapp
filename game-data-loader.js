@@ -11,7 +11,7 @@ const CACHE_KEY     = 'hsr_game_data_v1';
 const ICON_BASE = 'https://raw.githubusercontent.com/fribbels/hsr-optimizer/main/public/assets/icon';
 const IMG_BASE  = 'https://raw.githubusercontent.com/fribbels/hsr-optimizer/main/public/assets/image';
 
-const Icons = {
+const GameDataIcons = {
   avatar:    (id)     => `${ICON_BASE}/avatar/${id}.webp`,
   lightCone: (id)     => `${ICON_BASE}/light_cone/${id}.webp`,
   element:   (name)   => `${ICON_BASE}/element/${name}.webp`,
@@ -20,7 +20,7 @@ const Icons = {
   property:  (file)   => `${ICON_BASE}/property/${file}`,
 };
 
-const Images = {
+const GameDataImages = {
   charPortrait:  (id) => `${IMG_BASE}/character_portrait/${id}.webp`,
   charPreview:   (id) => `${IMG_BASE}/character_preview/${id}.webp`,
   lcPortrait:    (id) => `${IMG_BASE}/light_cone_portrait/${id}.webp`,
@@ -130,6 +130,6 @@ window.GameDataLoader = {
   getElements,
   getPaths,
   getLCPaths,
-  Icons,
-  Images,
+  Icons: GameDataIcons,
+  Images: GameDataImages,
 };
