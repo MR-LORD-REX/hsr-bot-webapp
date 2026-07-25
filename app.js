@@ -155,14 +155,14 @@ async function init() {
   let sBot  = params.get('bot');
 
   if (startParam) {
-    const parts = startParam.split('-');
+    const parts = startParam.split('_');
     // parts: [uid, slot, chatId, messageId, botUsername]
     if (parts.length >= 4) {
       sUid  = parts[0];
       sSlot = parts[1];
       sChat = parts[2];
       sMsg  = parts[3];
-      sBot  = parts.slice(4).join('-'); // bot username (no dashes normally)
+      sBot  = parts.slice(4).join('_'); // bot username
     }
   }
 
