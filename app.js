@@ -14,12 +14,12 @@ const API_URL = 'https://ilcapitano01-gi-card-api.hf.space/getcals';
 const {
   Icons,
   Images,
-  loadGameData: loadGameDataFromLoader,
-  getCharacterList: getGameCharacterList,
-  getLightConeList: getGameLightConeList,
-  getElements: getGameElements,
-  getPaths: getGamePaths,
-  getLCPaths: getGameLCPaths,
+  loadGameData,
+  getCharacterList,
+  getLightConeList,
+  getElements,
+  getPaths,
+  getLCPaths,
 } = window.GameDataLoader;
 
 const state = {
@@ -155,13 +155,13 @@ async function init() {
     setLoading('Loading data...');
     const [apiData, gameData] = await Promise.all([
       fetchApiData(state.uid, state.slot),
-      loadGameDataFromLoader(text => setLoading(text)),
+      loadGameData(text => setLoading(text)),
     ]);
 
     state.apiData  = apiData;
     state.gameData = gameData;
-    state.charList = getGameCharacterList(gameData);
-    state.lcList   = getGameLightConeList(gameData);
+    state.charList = getCharacterList(gameData);
+    state.lcList   = getLightConeList(gameData);
 
     // Pre-fill teammates from API defaults
     if (apiData.teammates && Array.isArray(apiData.teammates)) {
@@ -488,7 +488,7 @@ function closeCharModal() {
 
 function buildCharFilterChips() {
   // Elements
-  const elements = getGameElements(state.charList);
+  const elements = getElements(state.charList);
   dom.elementFilters.innerHTML = '';
   elements.forEach(el => {
     const chip = makeChip(el, Icons.element(el), state.charFilters.element === el, () => {
@@ -500,7 +500,7 @@ function buildCharFilterChips() {
   });
 
   // Paths
-  const paths = getGamePaths(state.charList);
+  const paths = getPaths(state.charList);
   dom.pathFilters.innerHTML = '';
   paths.forEach(p => {
     const chip = makeChip(p, Icons.path(p), state.charFilters.path === p, () => {
@@ -572,8 +572,8 @@ function closeLCModal() {
 }
 
 function buildLCFilterChips() {
-  const allLCs = getGameLightConeList(state.gameData);
-  const paths  = getGameLCPaths(allLCs);
+  const allLCs = getLightConeList(state.gameData);
+  const paths  = getLCPaths(allLCs);
 
   dom.lcPathFilters.innerHTML = '';
   paths.forEach(p => {
@@ -602,7 +602,7 @@ function buildLCFilterChips() {
 
 function renderLCGrid() {
   const { path, rarity, search } = state.lcFilters;
-  let list = getGameLightConeList(state.gameData, path);
+  let list = getLightConeList(state.gameData, path);
 
   if (rarity) list = list.filter(lc => lc.rarity === rarity);
   if (search) list = list.filter(lc => lc.name.toLowerCase().includes(search));
