@@ -637,6 +637,24 @@ function submitData() {
   const ready = state.teammates.every(Boolean);
   if (!ready) return;
 
+  const params = new URLSearchParams(window.location.search);
+  const botUsername = params.get('bot');
+
+  if (tg && botUsername) {
+    // Format: c_{slot}_{cId1}-{lc1}-{e1}{s1}_{cId2}...
+    const parts = [ `c`, state.slot ];
+    state.teammates.forEach(tm => {
+      parts.push(`${tm.characterId}-${tm.lightConeId}-${tm.characterEidolon}${tm.lightConeSuperimposition}`);
+    });
+    
+    const payloadStr = parts.join('_');
+    tg.openTelegramLink(`https://t.me/${botUsername}?start=${payloadStr}`);
+    // Close the webapp explicitly (some clients don't auto-close on openTelegramLink)
+    setTimeout(() => tg.close(), 100);
+    return;
+  }
+
+  // Fallback if not opened with bot param (e.g. Menu Button or dev mode)
   const payload = {
     slot: state.slot,
     teammates: state.teammates.map(tm => ({
