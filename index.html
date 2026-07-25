@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>HSR — Custom Team</title>
+  <meta name="description" content="Select a custom team of 3 teammates for your Honkai: Star Rail character card." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ─── LOADING OVERLAY ─────────────────────────────────────────── -->
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner-wrap">
+      <div class="hex-spinner">
+        <div class="hex-ring"></div>
+        <div class="hex-core"></div>
+      </div>
+      <p class="loading-text">Initializing...</p>
+    </div>
+  </div>
+
+  <!-- ─── ERROR SCREEN ─────────────────────────────────────────────── -->
+  <div id="error-screen" class="error-screen hidden">
+    <div class="error-inner">
+      <div class="error-icon">⚠</div>
+      <h2>Something went wrong</h2>
+      <p id="error-msg">Unable to load data.</p>
+      <button id="retry-btn" class="btn btn-primary">Retry</button>
+    </div>
+  </div>
+
+  <!-- ─── MAIN APP ──────────────────────────────────────────────────── -->
+  <div id="app" class="app hidden">
+
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <div id="header-char-icon" class="header-char-icon"></div>
+        <div class="header-info">
+          <span class="header-label">Custom Team</span>
+          <span id="header-char-name" class="header-char-name">—</span>
+        </div>
+      </div>
+      <div class="header-right">
+        <span id="header-uid" class="header-uid"></span>
+      </div>
+    </header>
+
+    <!-- Slot Tabs (for multi-character profiles) -->
+    <div id="slot-indicator" class="slot-indicator hidden">
+      <span class="slot-label">Slot</span>
+      <span id="slot-num" class="slot-num">1</span>
+    </div>
+
+    <!-- Main Character Panel -->
+    <section class="main-char-panel">
+      <div class="char-splash-wrap">
+        <img id="char-splash" class="char-splash" src="" alt="Character" loading="lazy" />
+        <div class="char-splash-gradient"></div>
+        <div class="char-badges">
+          <span id="char-element-badge" class="element-badge">
+            <img id="char-element-icon" class="badge-icon" src="" alt="" />
+            <span id="char-element-name"></span>
+          </span>
+          <span id="char-path-badge" class="path-badge">
+            <img id="char-path-icon" class="badge-icon" src="" alt="" />
+            <span id="char-path-name"></span>
+          </span>
+        </div>
+      </div>
+      <div class="char-info-panel">
+        <div class="char-name-row">
+          <h1 id="char-name" class="char-name">—</h1>
+          <div id="char-rarity-stars" class="rarity-stars"></div>
+        </div>
+        <div class="char-meta-row">
+          <span class="meta-label">Eidolon</span>
+          <span id="char-eidolon" class="meta-value eidolon-value">E0</span>
+          <span class="meta-divider">·</span>
+          <span class="meta-label">Light Cone</span>
+          <span id="char-lc-name" class="meta-value">—</span>
+        </div>
+        <div class="lc-strip">
+          <img id="char-lc-icon" class="lc-strip-icon" src="" alt="" />
+          <div class="lc-strip-info">
+            <span id="char-lc-name-full" class="lc-name">—</span>
+            <span id="char-lc-si" class="lc-si">S1</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Divider -->
+    <div class="section-divider">
+      <span class="divider-line"></span>
+      <span class="divider-label">TEAMMATES</span>
+      <span class="divider-line"></span>
+    </div>
+
+    <!-- Teammate Slots -->
+    <section class="teammates-section">
+      <div id="teammates-grid" class="teammates-grid">
+        <!-- Slot 0 -->
+        <div class="teammate-slot" data-slot="0" id="slot-0">
+          <div class="slot-add-btn" data-slot="0">
+            <div class="slot-add-icon">＋</div>
+            <span class="slot-add-text">Add</span>
+          </div>
+          <div class="slot-filled hidden">
+            <div class="slot-char-img-wrap">
+              <img class="slot-char-img" src="" alt="" />
+              <div class="slot-char-img-overlay"></div>
+            </div>
+            <div class="slot-eidolon-badge"></div>
+            <div class="slot-lc-wrap">
+              <img class="slot-lc-img" src="" alt="" />
+              <span class="slot-lc-si-badge"></span>
+            </div>
+            <span class="slot-char-name"></span>
+            <button class="slot-edit-btn" data-slot="0">✎</button>
+            <button class="slot-remove-btn" data-slot="0">✕</button>
+          </div>
+        </div>
+        <!-- Slot 1 -->
+        <div class="teammate-slot" data-slot="1" id="slot-1">
+          <div class="slot-add-btn" data-slot="1">
+            <div class="slot-add-icon">＋</div>
+            <span class="slot-add-text">Add</span>
+          </div>
+          <div class="slot-filled hidden">
+            <div class="slot-char-img-wrap">
+              <img class="slot-char-img" src="" alt="" />
+              <div class="slot-char-img-overlay"></div>
+            </div>
+            <div class="slot-eidolon-badge"></div>
+            <div class="slot-lc-wrap">
+              <img class="slot-lc-img" src="" alt="" />
+              <span class="slot-lc-si-badge"></span>
+            </div>
+            <span class="slot-char-name"></span>
+            <button class="slot-edit-btn" data-slot="1">✎</button>
+            <button class="slot-remove-btn" data-slot="1">✕</button>
+          </div>
+        </div>
+        <!-- Slot 2 -->
+        <div class="teammate-slot" data-slot="2" id="slot-2">
+          <div class="slot-add-btn" data-slot="2">
+            <div class="slot-add-icon">＋</div>
+            <span class="slot-add-text">Add</span>
+          </div>
+          <div class="slot-filled hidden">
+            <div class="slot-char-img-wrap">
+              <img class="slot-char-img" src="" alt="" />
+              <div class="slot-char-img-overlay"></div>
+            </div>
+            <div class="slot-eidolon-badge"></div>
+            <div class="slot-lc-wrap">
+              <img class="slot-lc-img" src="" alt="" />
+              <span class="slot-lc-si-badge"></span>
+            </div>
+            <span class="slot-char-name"></span>
+            <button class="slot-edit-btn" data-slot="2">✎</button>
+            <button class="slot-remove-btn" data-slot="2">✕</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Submit Footer -->
+    <footer class="app-footer">
+      <div class="submit-hint" id="submit-hint">Fill all 3 teammate slots to generate</div>
+      <button id="submit-btn" class="btn btn-submit" disabled>
+        <span class="btn-icon">✦</span>
+        Generate Card
+      </button>
+    </footer>
+  </div>
+
+  <!-- ─── CHARACTER PICKER MODAL ────────────────────────────────────── -->
+  <div id="char-modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Select a character">
+    <div class="modal-backdrop"></div>
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h2 class="modal-title">Select a character</h2>
+        <button class="modal-close-btn" id="char-modal-close">✕</button>
+      </div>
+      <div class="modal-search-bar">
+        <input id="char-search" class="modal-search" type="text" placeholder="Search character name..." autocomplete="off" />
+        <div id="element-filters" class="filter-chips"></div>
+        <div id="path-filters" class="filter-chips"></div>
+      </div>
+      <div id="char-grid" class="picker-grid"></div>
+    </div>
+  </div>
+
+  <!-- ─── LIGHT CONE PICKER MODAL ───────────────────────────────────── -->
+  <div id="lc-modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Select a light cone">
+    <div class="modal-backdrop"></div>
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h2 class="modal-title">Select a light cone</h2>
+        <button class="modal-close-btn" id="lc-modal-close">✕</button>
+      </div>
+      <div class="modal-search-bar">
+        <input id="lc-search" class="modal-search" type="text" placeholder="Light cone name..." autocomplete="off" />
+        <div id="lc-path-filters" class="filter-chips"></div>
+        <div id="lc-rarity-filters" class="filter-chips"></div>
+      </div>
+      <div id="lc-grid" class="picker-grid lc-picker-grid"></div>
+    </div>
+  </div>
+
+  <!-- ─── TEAMMATE CONFIG MODAL ─────────────────────────────────────── -->
+  <div id="config-modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Configure teammate">
+    <div class="modal-backdrop"></div>
+    <div class="modal-sheet config-sheet">
+      <div class="modal-header">
+        <h2 class="modal-title">Configure Teammate</h2>
+        <button class="modal-close-btn" id="config-modal-close">✕</button>
+      </div>
+      <div class="config-body">
+        <!-- Selected Character Row -->
+        <div class="config-section">
+          <span class="config-label">Character</span>
+          <div class="config-char-row" id="config-char-row">
+            <img id="config-char-icon" class="config-icon" src="" alt="" />
+            <span id="config-char-name" class="config-name">—</span>
+            <button id="config-change-char" class="btn btn-ghost btn-sm">Change</button>
+          </div>
+        </div>
+        <!-- Eidolon -->
+        <div class="config-section">
+          <span class="config-label">Eidolon</span>
+          <div class="rank-selector" id="eidolon-selector">
+            <button class="rank-btn active" data-rank="0">E0</button>
+            <button class="rank-btn" data-rank="1">E1</button>
+            <button class="rank-btn" data-rank="2">E2</button>
+            <button class="rank-btn" data-rank="3">E3</button>
+            <button class="rank-btn" data-rank="4">E4</button>
+            <button class="rank-btn" data-rank="5">E5</button>
+            <button class="rank-btn" data-rank="6">E6</button>
+          </div>
+        </div>
+        <!-- Selected Light Cone Row -->
+        <div class="config-section">
+          <span class="config-label">Light Cone</span>
+          <div class="config-char-row" id="config-lc-row">
+            <img id="config-lc-icon" class="config-icon lc-icon" src="" alt="" />
+            <span id="config-lc-name" class="config-name">—</span>
+            <button id="config-change-lc" class="btn btn-ghost btn-sm">Change</button>
+          </div>
+        </div>
+        <!-- Superimposition -->
+        <div class="config-section">
+          <span class="config-label">Superimposition</span>
+          <div class="rank-selector" id="si-selector">
+            <button class="rank-btn active" data-rank="1">S1</button>
+            <button class="rank-btn" data-rank="2">S2</button>
+            <button class="rank-btn" data-rank="3">S3</button>
+            <button class="rank-btn" data-rank="4">S4</button>
+            <button class="rank-btn" data-rank="5">S5</button>
+          </div>
+        </div>
+      </div>
+      <div class="config-footer">
+        <button id="config-cancel" class="btn btn-ghost">Cancel</button>
+        <button id="config-save" class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="game-data-loader.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
