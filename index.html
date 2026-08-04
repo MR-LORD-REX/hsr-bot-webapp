@@ -13,7 +13,6 @@
 </head>
 <body>
 
-  <!-- ─── LOADING OVERLAY ─────────────────────────────────────────── -->
   <div id="loading-overlay" class="loading-overlay">
     <div class="loading-spinner-wrap">
       <div class="hex-spinner">
@@ -24,7 +23,6 @@
     </div>
   </div>
 
-  <!-- ─── ERROR SCREEN ─────────────────────────────────────────────── -->
   <div id="error-screen" class="error-screen hidden">
     <div class="error-inner">
       <div class="error-icon">⚠</div>
@@ -34,7 +32,6 @@
     </div>
   </div>
 
-  <!-- ─── MAIN APP ──────────────────────────────────────────────────── -->
   <div id="app" class="app hidden">
 
     <!-- Top Header -->
@@ -51,13 +48,12 @@
       </div>
     </header>
 
-    <!-- Slot Tabs (for multi-character profiles) -->
     <div id="slot-indicator" class="slot-indicator hidden">
       <span class="slot-label">Slot</span>
       <span id="slot-num" class="slot-num">1</span>
     </div>
 
-    <!-- Main Character Panel -->
+
     <section class="main-char-panel">
       <div class="char-splash-wrap">
         <img id="char-splash" class="char-splash" src="" alt="Character" loading="lazy" />
@@ -181,12 +177,17 @@
     </footer>
   </div>
 
-  <!-- ─── CHARACTER PICKER MODAL ────────────────────────────────────── -->
+
   <div id="char-modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Select a character">
     <div class="modal-backdrop"></div>
     <div class="modal-sheet">
       <div class="modal-header">
         <h2 class="modal-title">Select a character</h2>
+        <label class="unreleased-toggle" id="char-unreleased-toggle">
+          <input type="checkbox" id="char-unreleased-cb" checked />
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span class="toggle-label">Unreleased</span>
+        </label>
         <button class="modal-close-btn" id="char-modal-close">✕</button>
       </div>
       <div class="modal-search-bar">
@@ -198,12 +199,17 @@
     </div>
   </div>
 
-  <!-- ─── LIGHT CONE PICKER MODAL ───────────────────────────────────── -->
+
   <div id="lc-modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Select a light cone">
     <div class="modal-backdrop"></div>
     <div class="modal-sheet">
       <div class="modal-header">
         <h2 class="modal-title">Select a light cone</h2>
+        <label class="unreleased-toggle" id="lc-unreleased-toggle">
+          <input type="checkbox" id="lc-unreleased-cb" checked />
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          <span class="toggle-label">Unreleased</span>
+        </label>
         <button class="modal-close-btn" id="lc-modal-close">✕</button>
       </div>
       <div class="modal-search-bar">
@@ -215,7 +221,7 @@
     </div>
   </div>
 
-  <!-- ─── TEAMMATE CONFIG MODAL ─────────────────────────────────────── -->
+
   <div id="config-modal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Configure teammate">
     <div class="modal-backdrop"></div>
     <div class="modal-sheet config-sheet">

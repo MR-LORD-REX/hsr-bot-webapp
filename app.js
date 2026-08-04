@@ -45,8 +45,8 @@ const state = {
     superimpose:   1,
   },
 
-  charFilters: { element: null, path: null, search: '' },
-  lcFilters:   { path: null, rarity: null, search: '' },
+  charFilters: { element: null, path: null, search: '', showUnreleased: true },
+  lcFilters:   { path: null, rarity: null, search: '', showUnreleased: true },
 };
 
 const $ = id => document.getElementById(id);
@@ -113,6 +113,10 @@ const dom = {
   lcRarityFilters:$('lc-rarity-filters'),
   lcGrid:         $('lc-grid'),
 
+  // Unreleased toggles
+  charUnreleasedCb: $('char-unreleased-cb'),
+  lcUnreleasedCb:   $('lc-unreleased-cb'),
+
   // Config modal
   configModal:      $('config-modal'),
   configModalClose: $('config-modal-close'),
@@ -133,7 +137,7 @@ const dom = {
 async function init() {
   setLoading('Connecting...');
   
-  // ── Load config.json (bot API URL) ────────────────────────────────────
+
   try {
     const cfgRes = await fetch('./config.json');
     const cfg    = await cfgRes.json();
@@ -142,7 +146,7 @@ async function init() {
     console.warn('config.json not found or invalid — direct API posting disabled');
   }
 
-  // ── Parse startParam (Direct Link: t.me/bot/team?startapp=...) ─────────
+  // ── Parse startParam (Direct Link: t.me/bot/team?startapp=...) 
   // Format: {uid}-{slot}-{chatId}-{messageId}-{botUsername}
   // URL params are the fallback (for local dev / web_app buttons)
   const params     = new URLSearchParams(window.location.search);
@@ -184,8 +188,8 @@ async function init() {
 
     state.apiData  = apiData;
     state.gameData = gameData;
-    state.charList = getCharacterList(gameData);
-    state.lcList   = getLightConeList(gameData);
+    state.charList = getCharacterList(gameData, state.charFilters.showUnreleased);
+    state.lcList   = getLightConeList(gameData, null, state.lcFilters.showUnreleased);
 
     // Pre-fill teammates from API defaults
     if (apiData.teammates && Array.isArray(apiData.teammates)) {
@@ -402,6 +406,20 @@ function bindEvents() {
     state.lcFilters.search = dom.lcSearch.value.toLowerCase().trim();
     renderLCGrid();
   }, 200));
+
+  // Unreleased toggles
+  dom.charUnreleasedCb.addEventListener('change', () => {
+    state.charFilters.showUnreleased = dom.charUnreleasedCb.checked;
+    state.charList = getCharacterList(state.gameData, state.charFilters.showUnreleased);
+    buildCharFilterChips();
+    renderCharGrid();
+  });
+  dom.lcUnreleasedCb.addEventListener('change', () => {
+    state.lcFilters.showUnreleased = dom.lcUnreleasedCb.checked;
+    state.lcList = getLightConeList(state.gameData, null, state.lcFilters.showUnreleased);
+    buildLCFilterChips();
+    renderLCGrid();
+  });
 }
 
 function removeTeammate(i) {
@@ -497,8 +515,10 @@ let _charModalOrigin = 'direct'; // 'direct' | 'config'
 
 function openCharModalFromConfig() {
   _charModalOrigin = 'config';
-  state.charFilters = { element: null, path: null, search: '' };
+  state.charFilters = { element: null, path: null, search: '', showUnreleased: state.charFilters.showUnreleased };
   dom.charSearch.value = '';
+  dom.charUnreleasedCb.checked = state.charFilters.showUnreleased;
+  state.charList = getCharacterList(state.gameData, state.charFilters.showUnreleased);
   buildCharFilterChips();
   renderCharGrid();
   hideModal(dom.configModal);
@@ -582,8 +602,10 @@ let _lcModalOrigin = 'config';
 
 function openLCModalFromConfig() {
   _lcModalOrigin = 'config';
-  state.lcFilters = { path: state.config.characterPath, rarity: null, search: '' };
+  state.lcFilters = { path: state.config.characterPath, rarity: null, search: '', showUnreleased: state.lcFilters.showUnreleased };
   dom.lcSearch.value = '';
+  dom.lcUnreleasedCb.checked = state.lcFilters.showUnreleased;
+  state.lcList = getLightConeList(state.gameData, null, state.lcFilters.showUnreleased);
   buildLCFilterChips();
   renderLCGrid();
   hideModal(dom.configModal);
@@ -596,7 +618,7 @@ function closeLCModal() {
 }
 
 function buildLCFilterChips() {
-  const allLCs = getLightConeList(state.gameData);
+  const allLCs = getLightConeList(state.gameData, null, state.lcFilters.showUnreleased);
   const paths  = getLCPaths(allLCs);
 
   dom.lcPathFilters.innerHTML = '';
@@ -626,7 +648,7 @@ function buildLCFilterChips() {
 
 function renderLCGrid() {
   const { path, rarity, search } = state.lcFilters;
-  let list = getLightConeList(state.gameData, path);
+  let list = getLightConeList(state.gameData, path, state.lcFilters.showUnreleased);
 
   if (rarity) list = list.filter(lc => lc.rarity === rarity);
   if (search) list = list.filter(lc => lc.name.toLowerCase().includes(search));

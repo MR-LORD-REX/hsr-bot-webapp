@@ -56,14 +56,14 @@
     return _gameData;
   }
 
-  function getCharacterList(gameData) {
+  function getCharacterList(gameData, includeUnreleased = true) {
     return Object.values(gameData.characters)
-      .filter(c => !c.unreleased)
+      .filter(c => includeUnreleased || !c.unreleased)
       .sort((a, b) => b.rarity !== a.rarity ? b.rarity - a.rarity : a.name.localeCompare(b.name));
   }
 
-  function getLightConeList(gameData, pathFilter = null) {
-    let lcs = Object.values(gameData.lightCones).filter(lc => !lc.unreleased);
+  function getLightConeList(gameData, pathFilter = null, includeUnreleased = true) {
+    let lcs = Object.values(gameData.lightCones).filter(lc => includeUnreleased || !lc.unreleased);
     if (pathFilter) lcs = lcs.filter(lc => lc.path === pathFilter);
     return lcs.sort((a, b) => b.rarity !== a.rarity ? b.rarity - a.rarity : a.name.localeCompare(b.name));
   }
