@@ -1,4 +1,4 @@
 {
-  "api_url": "https://vh-prod-main-0aa5dc-751e4171.livemy.site/submit_team",
+  "api_url": "http://ec2-15-206-189-91.ap-south-1.compute.amazonaws.com/submit_team",
   "_comment": "ok"
 }
