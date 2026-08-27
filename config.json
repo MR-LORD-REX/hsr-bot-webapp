@@ -1,4 +1,4 @@
 {
-  "api_url": "http://ec2-15-206-189-91.ap-south-1.compute.amazonaws.com/submit_team",
+  "api_url": "https://hsr-bot-webapp.vercel.app/submit_team",
   "_comment": "ok"
 }
