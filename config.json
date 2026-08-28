@@ -1,4 +1,4 @@
 {
-  "api_url": "https://hsr-bot-webapp.vercel.app/submit_team",
+  "api_url": "https://hsr-bot-webapp.vercel.app/api/submit_team",
   "_comment": "ok"
 }
